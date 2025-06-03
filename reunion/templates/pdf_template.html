@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Récapitulatif des Disponibilités de Réunion</title>
+    <!-- Le CSS sera injecté par WeasyPrint, mais vous pouvez mettre des styles inline ou référencer un CSS pour le développement -->
+    <style>
+        /* Styles de base pour le développement du template, seront surchargés par pdf_style.css */
+        body { font-family: sans-serif; line-height: 1.4; margin: 20px;}
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        .header h1 { margin: 0; font-size: 24px; }
+        .header p { margin: 5px 0; font-size: 14px; }
+        .final-slot { text-align: center; margin-bottom: 20px; font-size: 18px; font-weight: bold; padding: 10px; background-color: #e6f7ff; border: 1px solid #b3e0ff;}
+        .teacher-block { margin-bottom: 25px; padding: 15px; border: 1px solid #ccc; border-radius: 5px; background-color: #f9f9f9; }
+        .teacher-block h2 { font-size: 18px; margin-top: 0; margin-bottom:10px; color: #0056b3; border-bottom: 1px solid #eee; padding-bottom: 5px;}
+        .slot-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .slot-table th, .slot-table td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+        .slot-table th { background-color: #f2f2f2; font-weight: bold; }
+        .comment { font-style: italic; color: #555; margin-top: 5px; display: block; font-size: 11px; }
+        .no-choice { color: #888; font-style: italic; text-align: center; padding: 10px; }
+        .footer { text-align: center; font-size: 10px; color: #777; margin-top: 30px; border-top: 1px solid #ccc; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Récapitulatif des Disponibilités pour la Réunion</h1>
+        <p>Document généré le {{ current_date }}</p>
+    </div>
+
+    <div class="final-slot">
+        Créneau final retenu pour la réunion : {{ final_meeting_slot }}
+    </div>
+
+    {% if submissions_by_teacher %}
+        {% for teacher, submissions in submissions_by_teacher.items() %}
+        <div class="teacher-block">
+            <h2><i class="fas fa-user" style="margin-right: 8px;"></i>Enseignant : {{ teacher }}</h2>
+            {% if submissions %}
+                <table class="slot-table">
+                    <thead>
+                        <tr>
+                            <th>Jour</th>
+                            <th>Créneau Choisi</th>
+                            <th>Commentaire</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sub in submissions %}
+                        <tr>
+                            <td>{{ sub.day_of_week }}</td>
+                            <td>{{ sub.time_slot }}</td>
+                            <td>
+                                {% if sub.comment %}
+                                    <span class="comment">{{ sub.comment }}</span>
+                                {% else %}
+                                    <span class="comment">- Aucun -</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="no-choice">Aucun créneau n'a été soumis par cet enseignant.</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="no-choice">Aucune soumission de disponibilité n'a été enregistrée.</p>
+    {% endif %}
+
+    <div class="footer">
+        Planificateur de Réunion - {{ current_year if current_year else "Année en cours" }}
+    </div>
+</body>
+</html>

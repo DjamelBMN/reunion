@@ -1,0 +1,452 @@
+/* static/style.css */
+:root {
+    --primary-hue: 195; /* Base pour un bleu/turquoise */
+    --primary-color: hsl(var(--primary-hue), 70%, 50%);      /* #29a1c8 */
+    --primary-darker: hsl(var(--primary-hue), 70%, 40%);     /* #1f81a2 */
+    --primary-lighter: hsl(var(--primary-hue), 70%, 95%);    /* #eaf7fb */
+
+    --secondary-color: hsl(210, 15%, 55%); /* Gris bleuté doux */
+    --tertiary-color: hsl(var(--primary-hue), 50%, 65%);
+
+    --success-color: #28a745;
+    --success-lighter: #e6ffed;
+    --info-color: #0dcaf0; /* Bootstrap info, peut être personnalisé */
+    --info-lighter: #e2f8fd;
+    --warning-color: #ffc107;
+    --warning-lighter: #fff8e1;
+    --danger-color: #dc3545;
+    --danger-lighter: #fdecea;
+
+    --light-bg: #f4f8fb; /* Un fond très légèrement bleuté/gris */
+    --dark-text: #343f56; /* Un bleu marine foncé pour le texte */
+    --light-text: #ffffff;
+    --card-bg: #ffffff;
+
+    --font-family-sans-serif: 'Cambria', sans-serif;
+    --font-family-base: 'Cambria', sans-serif;
+
+    --border-radius: 0.5rem;
+    --border-radius-lg: 0.8rem;
+    --box-shadow-sm: 0 .125rem .25rem rgb(0, 0, 0);
+    --box-shadow: 0 .5rem 1rem rgba(50, 50, 93, 0.084), 0 .25rem .5rem rgba(0,0,0,.07);
+    --box-shadow-lg: 0 1rem 3rem rgba(50, 50, 93, 0.101), 0 .5rem 1rem rgba(0,0,0,.1);
+    --box-shadow-xl: 0 1.5rem 4rem rgba(50, 50, 93, 0.059), 0 1rem 2.5rem rgba(0,0,0,.12);
+
+    /* Couleurs personnalisées pour Bootstrap via variables RGB (si besoin d'utiliser les classes utilitaires de BS) */
+    --bs-primary-rgb: 41, 161, 200; /* Correspond à --primary-color */
+    --bs-primary: var(--primary-color);
+    --bs-body-font-family: var(--font-family-base);
+    --bs-body-color: var(--dark-text);
+    --bs-body-bg: var(--light-bg);
+}
+
+body {
+    font-family: var(--font-family-base);
+    color: var(--dark-text);
+    background-color: var(--light-bg);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+.main-content {
+    flex-grow: 1;
+}
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+    font-family: var(--font-family-sans-serif);
+    font-weight: 600;
+    color: var(--dark-text);
+}
+
+.main-header {
+    /* Couleur du texte, ombre de la boîte, et forme */
+    color: var(--light-text);
+    box-shadow: var(--box-shadow-lg);
+    border-bottom-left-radius: 60px; /* Effet de courbe asymétrique */
+
+    /* Image de fond principale et dégradé superposé pour la lisibilité */
+    /* Assurez-vous que le chemin vers l'image est correct par rapport à la racine de votre site */
+    background-image: 
+        linear-gradient(135deg, rgba(0, 123, 255, 0.426) 0%, rgba(0, 87, 179, 0.66) 100%), /* Dégradé par-dessus */
+        url('/static/lycee.jpg'); /* Votre image en arrière-plan */
+    
+    background-size: cover;         /* Couvre toute la zone, peut rogner l'image */
+    background-position: center center; /* Centre l'image */
+    background-repeat: no-repeat;   /* Empêche la répétition de l'image */
+    
+    /* Une couleur de fond de secours si l'image ne se charge pas (optionnel) */
+    /* background-color: var(--primary-darker); */
+
+    position: relative; /* Utile si vous ajoutez des pseudo-éléments ou positionnez des enfants absolument */
+}
+
+.main-header h1 {
+    font-weight: 700;
+    color: var(--light-text);
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.6); /* Ombre pour améliorer la lisibilité */
+}
+
+.main-header .lead {
+    font-weight: 300;
+    /* opacity: 0.9; L'opacité ici affecte aussi l'ombre, préférez la transparence via rgba si besoin */
+    color: var(--light-text);
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5); /* Ombre pour améliorer la lisibilité */
+}
+
+.card {
+    border: none;
+    border-radius: var(--border-radius-lg);
+    background-color: var(--card-bg);
+    box-shadow: var(--box-shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow-lg);
+}
+.shadow-xl { box-shadow: var(--box-shadow-xl) !important; }
+.shadow-xl:hover { box-shadow: var(--box-shadow-xl) !important; transform: translateY(-3px); }
+
+
+.card-header.bg-primary-custom {
+    background-color: var(--primary-color) !important; /* Important pour surcharger Bootstrap */
+    border-bottom: none;
+    border-top-left-radius: var(--border-radius-lg);
+    border-top-right-radius: var(--border-radius-lg);
+}
+.form-title { color: var(--light-text); }
+
+
+.section-title-underline {
+    font-weight: 700;
+    color: var(--primary-darker);
+    position: relative;
+    display: inline-block; /* Pour que le soulignement ne prenne que la largeur du texte */
+    padding-bottom: 0.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.section-title-underline span {
+    position: relative;
+    z-index: 1;
+}
+.section-title-underline::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-lighter), var(--primary-color));
+    border-radius: 3px;
+    z-index: 0;
+}
+
+
+.availability-table th {
+    background-color: var(--primary-lighter) !important;
+    color: var(--primary-darker) !important;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.availability-table .day-header { text-align: left; }
+.availability-table .time-header,
+.availability-table .no-availability-header {
+    text-align: center;
+}
+.availability-table td.day-cell {
+    background-color: #f8f9fa;
+    font-weight: 500;
+}
+
+/* Styled Radio Buttons - légèrement améliorés */
+.form-check-input.styled-radio {
+    appearance: none; -webkit-appearance: none; -moz-appearance: none;
+    width: 1.6em; height: 1.6em;
+    border: 2px solid hsl(var(--primary-hue), 30%, 70%);
+    border-radius: 50%;
+    outline: none; cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    margin-right: 0;
+    position: relative; /* Pour le pseudo-élément ::after */
+}
+.form-check-input.styled-radio:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+.form-check-input.styled-radio:checked::after { /* Indicateur interne */
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 0.7em; height: 0.7em;
+    border-radius: 50%;
+    background-color: var(--light-text);
+}
+.form-check-input.styled-radio:hover {
+    border-color: var(--primary-darker);
+}
+.form-check-label { display: none; }
+.form-check-inline { margin-right: 0; }
+
+.submit-button {
+    padding: 0.8rem 2.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+}
+.submit-button:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: var(--box-shadow-lg) !important;
+}
+
+
+/* Accordion styling */
+.accordion-item {
+    border: 1px solid #dee2e6;
+    border-radius: var(--border-radius);
+    margin-bottom: 0.5rem;
+    overflow: hidden; /* Pour que le radius s'applique bien */
+}
+.accordion-button {
+    font-weight: 600;
+    color: var(--dark-text);
+    background-color: var(--primary-lighter);
+    border-bottom: 1px solid #e0e0e0;
+}
+.accordion-button:not(.collapsed) {
+    color: var(--light-text);
+    background-color: var(--primary-color);
+    box-shadow: inset 0 -1px 0 rgba(0,0,0,.1);
+}
+.accordion-button:focus {
+    box-shadow: 0 0 0 0.25rem hsla(var(--primary-hue), 70%, 50%, 0.3);
+}
+.accordion-button i { margin-right: 12px; }
+.icon-primary { color: var(--primary-color); }
+.icon-secondary { color: var(--secondary-color); }
+.icon-tertiary { color: var(--tertiary-color); }
+.icon-quaternary { color: #6f42c1; /* Bootstrap purple */ }
+.icon-danger { color: var(--danger-color); }
+.accordion-button:not(.collapsed) i { color: var(--light-text); }
+
+.summary-table thead.table-dark-custom th {
+    background-color: var(--dark-text) !important;
+    color: var(--light-text) !important;
+}
+.summary-table .count-cell {
+    font-weight: bold;
+    font-size: 1.1rem;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+.summary-table .count-cell.has-votes {
+    background-color: var(--success-lighter);
+    color: var(--success-color);
+}
+.summary-table .count-cell.majority-slot-highlight {
+    background-color: var(--success-color) !important; /* Important pour surcharger */
+    color: var(--light-text) !important;
+    font-size: 1.3rem;
+    animation: pulse-bg 1.5s infinite;
+}
+
+@keyframes pulse-bg {
+    0% { box-shadow: 0 0 0 0 hsla(var(--primary-hue), 80%, 60%, 0.5); }
+    70% { box-shadow: 0 0 0 10px hsla(var(--primary-hue), 80%, 60%, 0); }
+    100% { box-shadow: 0 0 0 0 hsla(var(--primary-hue), 80%, 60%, 0); }
+}
+
+
+.popular-slots-list .slot-text { font-weight: 500; }
+.popular-slots-list .vote-badge {
+    font-size: 0.9rem;
+    padding: .4em .7em;
+    background-color: var(--info-color) !important; /* Custom info color */
+    color: var(--light-text) !important;
+}
+.bg-info-custom { background-color: var(--info-color) !important; }
+
+.comments-list .comment-item {
+    border-bottom: 1px dashed #eee;
+}
+.comments-list .comment-item:last-child {
+    border-bottom: none;
+}
+.comments-list .comment-author { color: var(--primary-darker); font-weight: 600; }
+.comments-list .comment-text { font-style: italic; color: var(--secondary-color); padding-left: 10px; border-left: 3px solid var(--primary-lighter); }
+
+.participant-badge {
+    font-size: 0.9rem;
+    padding: .4em .7em;
+    margin: 3px;
+    background-color: #e9ecef;
+    color: var(--dark-text);
+    border: 1px solid #ced4da !important;
+}
+
+.majority-card {
+    background: linear-gradient(to right, var(--primary-lighter), hsl(var(--primary-hue), 60%, 92%));
+    border-left: 5px solid var(--primary-color);
+}
+.majority-card .icon-gold { color: #ffd700; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+.bg-primary-custom { background-color: var(--primary-color) !important; }
+.bg-light-info { background-color: var(--info-lighter) !important; border-left: 5px solid var(--info-color); }
+.bg-light-warning { background-color: var(--warning-lighter) !important; }
+
+
+.main-footer {
+    background-color: #343a40; /* Bootstrap dark */
+    color: rgba(255,255,255,.75);
+    font-size: 0.9rem;
+}
+.main-footer p { margin-bottom: 0; }
+.pulse-heart { animation: pulse-heartbeat 1.5s infinite ease-in-out; }
+
+@keyframes pulse-heartbeat {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .main-header { border-bottom-left-radius: 40px; }
+    .main-header h1 { font-size: 2.2rem; }
+    .main-header .lead { font-size: 1rem; }
+
+    .availability-table th, .availability-table td {
+        font-size: 0.8rem; padding: 0.4rem 0.2rem;
+    }
+    .availability-table .time-header {
+        writing-mode: vertical-rl; text-orientation: mixed;
+        white-space: nowrap; padding-top: 8px; padding-bottom: 8px;
+        font-size: 0.75rem;
+    }
+    .form-check-input.styled-radio { width: 1.4em; height: 1.4em; }
+    .submit-button { font-size: 1rem; padding: 0.6rem 1.5rem; }
+    .section-title-underline { font-size: 1.5rem; }
+    .majority-card .display-6 { font-size: 1.8rem; } /* Adjust h4 size on mobile */
+}
+
+@media (max-width: 576px) {
+    .main-header { border-bottom-left-radius: 30px; padding: 1.5rem 0 !important;}
+    .main-header h1 { font-size: 1.8rem; }
+     .availability-table .comment-header { display: none; } /* Hide comment header */
+    .availability-table .comment-cell input { font-size: 0.8rem; }
+    .availability-table .day-header { font-size: 0.75rem; }
+}
+
+/* ... (CSS existant de la version précédente) ... */
+
+/* Styles pour les messages Flash */
+.alert {
+    font-size: 0.95rem;
+}
+
+/* Carte pour le choix final figé */
+.final-choice-section .card-header {
+    border-bottom: none; /* Enlève la bordure par défaut si Bootstrap en met une */
+}
+.text-success-dark {
+    color: #146c43; /* Un vert plus foncé pour le texte du choix final */
+}
+.final-choice-section .fa-flag-checkered {
+    font-size: 1.2em; /* Un peu plus grande */
+}
+
+/* Carte pour les actions administratives */
+.action-card {
+    background-color: var(--primary-lighter);
+    border: 1px dashed var(--primary-color);
+}
+.action-card .btn {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Surbrillance du choix final dans le tableau des votes */
+.summary-table .count-cell.majority-slot-highlight { /* réutilisé, mais s'applique aussi au choix final */
+    background-color: var(--success-color) !important;
+    color: var(--light-text) !important;
+    font-size: 1.3rem;
+    animation: pulse-bg 1.5s infinite; /* Animation déjà définie */
+    position: relative;
+}
+/* Ajout d'une petite icône étoile pour le choix final dans le tableau */
+.summary-table .count-cell.majority-slot-highlight::before {
+    content: "\f005"; /* Code FontAwesome pour une étoile pleine */
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    font-size: 0.6em;
+    color: gold;
+    text-shadow: 0 0 2px black;
+}
+
+
+/* Amélioration de l'input pour la suppression */
+#teacher_name_to_delete {
+    margin-bottom: 0.5rem;
+}
+
+/* Rendre les labels obligatoires plus clairs */
+.form-label .text-danger {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-left: 2px;
+}
+
+/* ... (CSS existant) ... */
+
+.participant-badge-missing {
+    font-weight: 500;
+}
+.bg-warning-light { /* Nouvelle classe utilitaire pour un fond jaune pâle */
+    background-color: #fff9e6 !important;
+}
+
+.action-card .alert {
+    text-align: left; /* Pour une meilleure lisibilité des listes de noms */
+}
+
+/* static/style.css */
+
+/* ... (votre CSS existant) ... */
+
+.participation-tracking {
+    max-height: 500px; /* Ou une hauteur qui vous convient */
+    overflow-y: auto; /* Ajoute une barre de défilement si le contenu dépasse */
+    border-color: #e0e0e0 !important; /* Pour mieux voir la bordure sur fond clair */
+}
+
+.participation-tracking h5, .participation-tracking h6 {
+    color: var(--primary-darker);
+    font-weight: 500;
+}
+
+.participation-tracking .list-group-item {
+    border-left: none;
+    border-right: none;
+    border-top: 1px solid #f0f0f0; /* Ligne de séparation subtile */
+}
+.participation-tracking .list-group-item:first-child {
+    border-top: none;
+}
+
+.participation-tracking .small {
+    font-size: 0.875rem; /* Légèrement plus petit pour la liste */
+}
+
+/* Responsive: sur petits écrans, la colonne latérale passe en dessous */
+@media (max-width: 767.98px) { /* md breakpoint de Bootstrap */
+    .participation-tracking {
+        max-height: none; /* Pas de limite de hauteur sur mobile */
+        overflow-y: visible;
+        margin-top: 2rem; /* Ajouter de l'espace par rapport au formulaire */
+    }
+}
