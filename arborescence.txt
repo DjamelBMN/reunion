@@ -1,0 +1,22 @@
+meeting_scheduler/
+├── app.py                   # Fichier principal de l'application Flask
+├── init_db.sql              # Script SQL pour initialiser la base de données
+├── database.db              # Fichier de la base de données SQLite (sera créé)
+├── requirements.txt         # Dépendances Python pour PythonAnywhere
+├── static/
+│   └── style.css            # Fichier CSS pour le design
+└── templates/
+    └── index.html           # Page principale pour voter et voir le récapitulatif
+
+
+# 1. Aller dans le dossier du projet
+cd C:\Users\nanod\desktop\reunion
+
+# 2. Activer l'environnement virtuel (adaptez 'venv' si le vôtre a un autre nom)
+.\venv\Scripts\Activate.ps1
+
+# 3. Initialiser la base de données (une fois, ou pour réinitialiser)
+flask init-db
+
+# 4. Lancer l'application (pour tester)
+flask run

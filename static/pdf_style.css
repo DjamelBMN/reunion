@@ -1,0 +1,123 @@
+/* static/pdf_style.css */
+@page {
+    size: A4;
+    margin: 1.5cm; /* Marges confortables */
+    
+    @bottom-center {
+        content: "Page " counter(page) " de " counter(pages);
+        font-size: 10pt;
+        color: #666;
+    }
+}
+
+body {
+    font-family: "Poppins", "Helvetica Neue", Helvetica, Arial, sans-serif; /* Polices professionnelles */
+    font-size: 11pt;
+    line-height: 1.5;
+    color: #333;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 25mm; /* Espace après l'en-tête */
+    border-bottom: 2px solid #0056b3; /* Couleur primaire foncée */
+    padding-bottom: 10mm;
+}
+
+.header h1 {
+    margin: 0 0 5mm 0;
+    font-size: 22pt;
+    color: #0056b3;
+    font-weight: 600;
+}
+
+.header p {
+    margin: 0;
+    font-size: 10pt;
+    color: #555;
+}
+
+.final-slot {
+    text-align: center;
+    margin-bottom: 15mm;
+    padding: 8mm;
+    background-color: #e7f3ff; /* Bleu très clair */
+    border: 1px solid #90c5ff; /* Bleu moyen */
+    border-radius: 4px;
+    font-size: 14pt;
+    font-weight: bold;
+    color: #004a8c; /* Bleu foncé */
+}
+
+.teacher-block {
+    margin-bottom: 12mm;
+    padding: 10mm;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fdfdfd;
+    page-break-inside: avoid; /* Éviter de couper un bloc enseignant sur deux pages */
+}
+
+.teacher-block h2 {
+    font-size: 15pt;
+    margin-top: 0;
+    margin-bottom: 8mm;
+    color: #0056b3; /* Couleur primaire foncée */
+    border-bottom: 1px solid #cee6ff; /* Bleu clair */
+    padding-bottom: 4mm;
+    font-weight: 500;
+    display: flex; /* Pour aligner l'icône si vous en ajoutez une via le template */
+    align-items: center;
+}
+/* Si vous utilisez FontAwesome dans le PDF (nécessite une configuration de polices pour WeasyPrint)
+.teacher-block h2 .fas { 
+    margin-right: 8px; 
+    color: #007bff;
+}
+*/
+
+.slot-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 5mm;
+}
+
+.slot-table th,
+.slot-table td {
+    border: 1px solid #ccc;
+    padding: 4mm 5mm; /* Plus d'espacement */
+    text-align: left;
+    font-size: 10pt;
+    vertical-align: top; /* Mieux pour les commentaires longs */
+}
+
+.slot-table th {
+    background-color: #f0f6ff; /* Bleu très très clair */
+    font-weight: 600; /* Plus gras */
+    color: #004a8c;
+}
+
+.comment {
+    font-style: italic;
+    color: #444;
+    margin-top: 2mm;
+    display: block;
+    font-size: 9pt;
+    white-space: pre-wrap; /* Préserver les sauts de ligne dans les commentaires */
+}
+
+.no-choice {
+    color: #777;
+    font-style: italic;
+    text-align: center;
+    padding: 10mm;
+    font-size: 10pt;
+}
+
+.footer {
+    text-align: right;
+    font-size: 9pt;
+    color: #777;
+    margin-top: 20mm;
+    /* Le numéro de page est géré par @bottom-center */
+}

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planificateur de Réunion Enseignants de mathématiques </title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+</head>
+<body>
+    <header class="main-header text-center text-white py-5 mb-5">
+        <div class="container">
+            <h1 class="display-4"><i class="fas fa-calendar-check me-2"></i>Planificateur de Réunion</h1>
+            <p class="lead">Partageons nos créneaux en fonction de nos disponibilités.
+                Le système départagera les égalités automatiquement, et un export PDF détaillé sera généré une fois que tout le monde aura contribué</p>
+        </div>
+    </header>
+
+    <div class="container main-content mb-5">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- CHOIX FINAL FIGÉ (reste inchangé) -->
+        {% if final_choice_db %}
+        <section class="final-choice-section card shadow-xl mb-5 text-center border-success">
+            <div class="card-header bg-success text-white">
+                <h2 class="card-title mb-0 py-2"><i class="fas fa-flag-checkered me-2"></i>Créneau Final pour la Réunion !</h2>
+            </div>
+            <div class="card-body p-4">
+                <p class="lead">La décision a été prise. Le créneau retenu pour la réunion est :</p>
+                <h3 class="display-5 my-3 fw-bold text-success-dark">
+                    {{ final_choice_db.day_of_week }} à {{ final_choice_db.time_slot }}
+                </h3>
+                <p>Avec <strong>{{ final_choice_db.votes }} vote{% if final_choice_db.votes > 1 %}s{% endif %}</strong>.</p>
+                {% if final_choice_db.is_tie_breaker %}
+                <p class="text-muted fst-italic"><small><i class="fas fa-random me-1"></i>Ce créneau a été sélectionné aléatoirement pour départager une égalité.</small></p>
+                {% endif %}
+                <p class="mt-4"><em>Les votes sont maintenant clos.</em></p>
+            </div>
+            <div class="card-footer bg-transparent border-0 pt-3">
+        <a href="{{ url_for('export_pdf') }}" class="btn btn-primary btn-lg" target="_blank">
+            <i class="fas fa-file-pdf me-2"></i>Exporter en PDF
+        </a>
+    </div>
+</section>
+        {% endif %}
+
+
+        <div class="row justify-content-center">
+            <div class="col-lg-12"> {# Utiliser toute la largeur pour mieux gérer les colonnes internes #}
+
+                <!-- Formulaire de soumission et Listes de Participation (visible seulement si pas de choix final) -->
+                {% if not final_choice_db %}
+                <section class="submission-form card shadow-xl mb-5">
+                    <div class="card-header bg-primary-custom text-white">
+                        <h2 class="card-title text-center mb-0 py-2 form-title"><i class="fas fa-edit me-2"></i>Indiquez Vos Disponibilités & Suivi Participation</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row">
+                            <!-- Colonne Principale: Formulaire de Vote -->
+                            <div class="col-lg-8 col-md-7 mb-4 mb-md-0">
+                                <form method="POST" action="{{ url_for('index') }}">
+                                    <div class="mb-3">
+                                        <label for="teacher_name_select" class="form-label fw-bold">Votre Nom/Prénom <span class="text-danger">*</span> :</label>
+                                        <select class="form-select form-select-lg" id="teacher_name_select" name="teacher_name_select" required onchange="toggleOtherTeacherField()">
+                                            <option value="" selected disabled>-- Sélectionnez votre nom ou "Autre..." --</option>
+                                            {% for teacher_opt in select_options_teachers %}
+                                            <option value="{{ teacher_opt }}">{{ teacher_opt }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="mb-3" id="other_teacher_field" style="display:none;">
+                                        <label for="other_teacher_name" class="form-label">Si "Autre...", veuillez saisir votre nom :</label>
+                                        <input type="text" class="form-control form-control-lg" id="other_teacher_name" name="other_teacher_name" placeholder="Votre Nom/Prénom">
+                                    </div>
+                                    <div class="form-text mt-1 mb-3">
+                                        <small>
+                                        <i class="fas fa-info-circle me-1"></i>Si votre nom n'est pas dans la liste, choisissez "Autre..." et saisissez-le.
+                                        Une nouvelle soumission <strong>remplacera intégralement</strong> vos votes précédents sous le même nom.
+                                        </small>
+                                    </div>
+
+                                    <p class="fw-medium mb-3">Sélectionnez un créneau par jour ou laissez "Indisponible" coché.</p>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover availability-table align-middle">
+                                            <!-- ... (contenu du tableau des créneaux identique à avant) ... -->
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th scope="col" class="day-header">Jour</th>
+                                                    {% for time in times %}
+                                                        <th scope="col" class="time-header text-center">{{ time }}</th>
+                                                    {% endfor %}
+                                                    <th scope="col" class="no-availability-header text-center">Indisponible</th>
+                                                    <th scope="col" class="comment-header">Commentaire (optionnel)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for day in days %}
+                                                <tr>
+                                                    <td class="fw-bold day-cell">{{ day }}</td>
+                                                    {% for time in times %}
+                                                    <td class="text-center slot-cell">
+                                                        <div class="form-check form-check-inline d-flex justify-content-center">
+                                                            <input class="form-check-input styled-radio" type="radio" name="slot_{{ day }}" id="slot_{{ day }}_{{ time.replace(':', '') }}" value="{{ time }}">
+                                                            <label class="form-check-label" for="slot_{{ day }}_{{ time.replace(':', '') }}"></label>
+                                                        </div>
+                                                    </td>
+                                                    {% endfor %}
+                                                    <td class="text-center slot-cell">
+                                                        <div class="form-check form-check-inline d-flex justify-content-center">
+                                                            <input class="form-check-input styled-radio" type="radio" name="slot_{{ day }}" id="slot_{{ day }}_none" value="" checked>
+                                                            <label class="form-check-label" for="slot_{{ day }}_none"></label>
+                                                        </div>
+                                                    </td>
+                                                    <td class="comment-cell">
+                                                        <input type="text" class="form-control form-control-sm" name="comment_{{ day }}" placeholder="Note pour {{ day }}...">
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="text-center mt-4 pt-2">
+                                        <button type="submit" class="btn btn-success btn-lg submit-button shadow-sm"><i class="fas fa-paper-plane me-2"></i>Soumettre / Mettre à jour mes choix</button>
+                                    </div>
+                                </form>
+                            </div> <!-- Fin Colonne Principale -->
+
+                            <!-- Colonne Latérale: Listes de Participation -->
+                            <div class="col-lg-4 col-md-5">
+                                <div class="participation-tracking p-3 border rounded bg-light">
+                                    <h5 class="mb-3 text-center"><i class="fas fa-clipboard-list me-1"></i>Suivi Participation</h5>
+                                    
+                                    <div class="mb-3">
+                                        <h6><i class="fas fa-user-check text-success me-1"></i>Ont voté (Liste Principale) ({{ voted_from_expected_list|length }}/{{expected_teacher_count}}):</h6>
+                                        <ul class="list-group list-group-flush small">
+                                            {% if voted_from_expected_list %}
+                                                {% for teacher_name in voted_from_expected_list %}
+                                                    <li class="list-group-item px-2 py-1 bg-transparent"><i class="fas fa-check-circle text-success me-2"></i>{{ teacher_name }}</li>
+                                                {% endfor %}
+                                            {% else %}
+                                                <li class="list-group-item px-2 py-1 bg-transparent text-muted fst-italic">Personne de la liste principale n'a encore voté.</li>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
+                                    <hr>
+                                    <div>
+                                        <h6><i class="fas fa-user-clock text-danger me-1"></i>En attente de vote (Liste Principale) ({{ missing_teachers|length }}):</h6>
+                                        {% if missing_teachers %}
+                                            <ul class="list-group list-group-flush small">
+                                                {% for teacher_name in missing_teachers %}
+                                                    <li class="list-group-item px-2 py-1 bg-transparent"><i class="fas fa-times-circle text-danger me-2"></i>{{ teacher_name }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                             <p class="small text-muted px-2 py-1 fst-italic">
+                                                {% if expected_teacher_count > 0 %} {# S'assurer qu'il y a des enseignants attendus #}
+                                                    Tous les enseignants de la liste principale ont voté !
+                                                {% else %}
+                                                    Aucun enseignant n'est spécifié dans la liste principale.
+                                                {% endif %}
+                                            </p>
+                                        {% endif %}
+                                    </div>
+
+                                    {# Section pour les votants "Autres" #}
+                                    {% set other_voters = [] %}
+                                    {% if all_teacher_names %} {# S'assurer que all_teacher_names est défini et non vide #}
+                                        {% for voter in all_teacher_names %}
+                                            {% if voter not in EXPECTED_TEACHERS %}
+                                                {% set _ = other_voters.append(voter) %} {# Astuce pour ajouter à une liste dans Jinja #}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+
+
+                                </div> <!-- Fin participation-tracking -->
+
+                                <hr class="my-4 d-md-none"> <!-- Séparateur visible seulement sur mobile avant la section suppression -->
+                                
+                                <div class="mt-4 pt-lg-3"> <!-- Espace avant la section suppression sur grand écran -->
+                                    <h4 class="text-center mb-3">Supprimer mes votes</h4>
+                                    <form method="POST" action="{{ url_for('delete_my_votes') }}" class="text-center" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer tous vos votes ? Cette action est irréversible.');">
+                                        <div class="mb-3 mx-auto" style="max-width: 300px;">
+                                            <label for="teacher_name_to_delete_select" class="form-label">Nom/Prénom :</label>
+                                            <select class="form-select form-select-sm" id="teacher_name_to_delete_select" name="teacher_name_to_delete_select" required onchange="toggleOtherTeacherDeleteField()">
+                                                <option value="" selected disabled>-- Sélectionnez ou "Autre..." --</option>
+                                                {% for teacher_opt in select_options_teachers %}
+                                                <option value="{{ teacher_opt }}">{{ teacher_opt }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="mb-3 mx-auto" id="other_teacher_delete_field" style="display:none; max-width: 300px;">
+                                            <label for="other_teacher_name_delete" class="form-label">Si "Autre...", nom à supprimer :</label>
+                                            <input type="text" class="form-control form-control-sm" id="other_teacher_name_delete" name="other_teacher_name_delete">
+                                        </div>
+                                        <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash-alt me-1"></i>Supprimer votes de ce nom</button>
+                                    </form>
+                                </div>
+                            </div> <!-- Fin Colonne Latérale -->
+                {% endif %}
+                <!-- ... (Section Récapitulative et reste du HTML comme avant) ... -->
+                 <!-- Section Récapitulative (toujours visible, mais actions conditionnelles) -->
+                {% if submissions_raw or final_choice_db %} {# Afficher si des soumissions existent OU si un choix final a été fait #}
+                <section class="summary-section mb-5">
+                    <h2 class="text-center mb-4 section-title-underline">
+                        <span>
+                            {% if final_choice_db %}
+                                <i class="fas fa-history me-2"></i>Historique des Votes
+                            {% else %}
+                                <i class="fas fa-poll me-2"></i>Résultats & Récapitulatif
+                            {% endif %}
+                        </span>
+                    </h2>
+
+                    <!-- INFO PARTICIPATION & BOUTONS D'ACTION (si pas de choix final ET des votes) -->
+                    {% if not final_choice_db and submissions_raw %} {# Modifié pour s'assurer que submissions_raw existe #}
+                        <div class="card shadow-lg mb-4 text-center action-card">
+                            <div class="card-body">
+                                <h4 class="card-title mb-3">Niveau de participation</h4>
+                                {% if not all_expected_voted %}
+                                    <div class="alert alert-info" role="alert">
+                                        <i class="fas fa-hourglass-half me-2"></i>
+                                        En attente de la participation de tous les enseignants de la liste principale ({{ (expected_teacher_count - missing_teachers|length) }}/{{ expected_teacher_count }} ont voté).
+                                        {% if missing_teachers %}
+                                            <br>Manquant (liste principale) : <strong>{{ missing_teachers|join(', ') }}</strong>.
+                                        {% endif %}
+                                        <br>Les actions de départage ou de confirmation seront disponibles une fois que tous les enseignants de la liste principale auront voté.
+                                    </div>
+                                {% else %} {# Tous ont voté #}
+                                    <div class="alert alert-success" role="alert">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        Tous les {{ expected_teacher_count }} enseignants de la liste principale ont voté !
+                                    </div>
+                                    {% if majority_slot_info and majority_slot_info.is_tie %}
+                                        <p class="mt-3">Il y a égalité pour le créneau le plus populaire !</p>
+                                        <form method="POST" action="{{ url_for('resolve_tie') }}" onsubmit="return confirm('Êtes-vous sûr de vouloir départager aléatoirement ? Ce choix sera définitif.');">
+                                            <button type="submit" class="btn btn-warning btn-lg"><i class="fas fa-random me-2"></i>Départager l'Égalité (Aléatoire)</button>
+                                        </form>
+                                    {% elif majority_slot_info and not majority_slot_info.is_tie %}
+                                        <p class="mt-3">Un créneau majoritaire se dessine. Voulez-vous le confirmer ?</p>
+                                        <form method="POST" action="{{ url_for('confirm_majority_choice') }}" onsubmit="return confirm('Êtes-vous sûr de vouloir confirmer ce choix majoritaire ? Il deviendra définitif.');">
+                                            <button type="submit" class="btn btn-info btn-lg"><i class="fas fa-check-circle me-2"></i>Confirmer le Choix Majoritaire</button>
+                                        </form>
+                                    {% elif not majority_slot_info %} {# Aucun vote n'a été soumis du tout #}
+                                        <p class="mt-3 text-muted">Aucun vote soumis pour le moment. Pas d'action possible.</p>
+                                    {% endif %}
+                                     {% if majority_slot_info %} {# Afficher ce message seulement s'il y a des votes #}
+                                    <p class="form-text mt-2"><small>Ces actions figent le choix final et ferment les votes.</small></p>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- CRÉNEAU MAJORITAIRE ACTUEL (comme avant) -->
+                    {% if not final_choice_db and majority_slot_info %}
+                    <div class="card shadow-xl mb-5 text-center majority-card">
+                        <div class="card-body p-4">
+                            <h3 class="card-title mb-3"><i class="fas fa-trophy me-2 icon-gold"></i>
+                                Créneau{% if majority_slot_info.is_tie %}x{% endif %} Actuellement Majoritaire{% if majority_slot_info.is_tie %}s{% endif %}
+                            </h3>
+                            {% if majority_slot_info.is_tie %}
+                                <p class="lead">Plusieurs créneaux sont à égalité avec <strong>{{ majority_slot_info.votes }} vote{% if majority_slot_info.votes > 1 %}s{% endif %}</strong> :</p>
+                                <div class="d-flex flex-wrap justify-content-center gap-2">
+                                {% for slot in majority_slot_info.slots %}
+                                    <span class="badge bg-primary-custom fs-5 px-3 py-2">{{ slot.day }} à {{ slot.time }}</span>
+                                {% endfor %}
+                                </div>
+                            {% else %}
+                                {% set winning_slot = majority_slot_info.slots[0] %}
+                                <p class="lead">Le créneau actuellement plébiscité est :</p>
+                                <h4 class="display-6 my-3"><span class="badge bg-primary-custom px-4 py-2">{{ winning_slot.day }} à {{ winning_slot.time }}</span></h4>
+                                <p class="fs-5">Avec <strong class="text-success">{{ winning_slot.votes }} vote{% if winning_slot.votes > 1 %}s{% endif %}</strong>.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% elif not final_choice_db and submissions_raw and not majority_slot_info %}
+                     <div class="card shadow-xl mb-5 text-center majority-card bg-light-info">
+                        <div class="card-body p-4">
+                            <h3 class="card-title mb-3"><i class="fas fa-info-circle me-2"></i>Aucun Créneau Proposé</h3>
+                            <p class="lead">Aucun enseignant n'a proposé de créneau pour le moment.</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="accordion" id="summaryAccordion">
+                         <!-- ... (contenu de l'accordéon identique à avant) ... -->
+                        <!-- Votes par créneau -->
+                        <div class="accordion-item">
+                            <h3 class="accordion-header" id="headingVotes">
+                                <button class="accordion-button {% if final_choice_db %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseVotes" aria-expanded="{% if not final_choice_db %}true{% else %}false{% endif %}" aria-controls="collapseVotes">
+                                    <i class="fas fa-vote-yea me-2 icon-primary"></i>Détail des Votes par Créneau
+                                </button>
+                            </h3>
+                            <div id="collapseVotes" class="accordion-collapse collapse {% if not final_choice_db %}show{% endif %}" aria-labelledby="headingVotes" data-bs-parent="#summaryAccordion">
+                                <div class="accordion-body">
+                                    {% if submissions_raw %}
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-hover summary-table">
+                                            <thead class="table-dark-custom">
+                                                <tr>
+                                                    <th>Jour \ Horaire</th>
+                                                    {% for time_col in times %}
+                                                        <th class="text-center">{{ time_col }}</th>
+                                                    {% endfor %}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for day_row in days %}
+                                                <tr>
+                                                    <td class="fw-bold">{{ day_row }}</td>
+                                                    {% for time_slot_display in times %}
+                                                        {% set current_votes = votes_per_slot[day_row][time_slot_display] %}
+                                                        {% set is_majority = False %}
+                                                        {% if not final_choice_db and majority_slot_info %}
+                                                            {% for maj_slot in majority_slot_info.slots %}
+                                                                {% if maj_slot.day == day_row and maj_slot.time == time_slot_display and maj_slot.votes == majority_slot_info.votes %}
+                                                                    {% set is_majority = True %}
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        {% elif final_choice_db and final_choice_db.day_of_week == day_row and final_choice_db.time_slot == time_slot_display %}
+                                                            {% set is_majority = True %}
+                                                        {% endif %}
+                                                        <td class="text-center count-cell {% if current_votes > 0 %} has-votes {% endif %} {% if is_majority %} majority-slot-highlight {% endif %}">
+                                                            {{ current_votes }}
+                                                        </td>
+                                                    {% endfor %}
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <p class="text-muted fst-italic text-center py-3">Aucun vote enregistré pour le moment.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Créneaux populaires -->
+                        <div class="accordion-item">
+                            <h3 class="accordion-header" id="headingPopular">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePopular" aria-expanded="false" aria-controls="collapsePopular">
+                                    <i class="fas fa-medal me-2 icon-secondary"></i>Classement des Créneaux (par popularité)
+                                </button>
+                            </h3>
+                            <div id="collapsePopular" class="accordion-collapse collapse" aria-labelledby="headingPopular" data-bs-parent="#summaryAccordion">
+                                <div class="accordion-body">
+                                    {% if popular_slots_display %}
+                                        <ul class="list-group list-group-flush popular-slots-list">
+                                            {% for slot_info, count in popular_slots_display %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <span class="slot-text"><i class="far fa-calendar-alt me-2 text-muted"></i>{{ slot_info[0] }} à {{ slot_info[1] }}</span>
+                                                <span class="badge bg-info-custom rounded-pill vote-badge">{{ count }} vote{% if count > 1 %}s{% endif %}</span>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <p class="text-muted fst-italic">Aucun créneau n'a encore reçu de vote.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Commentaires -->
+                        {% if comments_list %}
+                        <div class="accordion-item">
+                            <h3 class="accordion-header" id="headingComments">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseComments" aria-expanded="false" aria-controls="collapseComments">
+                                    <i class="fas fa-comments me-2 icon-tertiary"></i>Commentaires Soumis ({{ comments_list|length }})
+                                </button>
+                            </h3>
+                            <div id="collapseComments" class="accordion-collapse collapse" aria-labelledby="headingComments" data-bs-parent="#summaryAccordion">
+                                <div class="accordion-body">
+                                    <ul class="list-group list-group-flush comments-list">
+                                        {% for comment in comments_list %}
+                                        <li class="list-group-item comment-item">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1 comment-author">{{ comment.teacher }}</h6>
+                                                <small class="text-muted">{{ comment.day }} {{ comment.time }}</small>
+                                            </div>
+                                            <p class="mb-1 comment-text">"{{ comment.comment_text }}"</p>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <!-- Participants -->
+                         {% if submissions_raw %}
+                        <div class="accordion-item">
+                            <h3 class="accordion-header" id="headingTeachers">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTeachers" aria-expanded="false" aria-controls="collapseTeachers">
+                                    <i class="fas fa-users me-2 icon-quaternary"></i>Participants Ayant Voté ({{ all_teacher_names|length }}/{{ expected_teacher_count }})
+                                </button>
+                            </h3>
+                            <div id="collapseTeachers" class="accordion-collapse collapse" aria-labelledby="headingTeachers" data-bs-parent="#summaryAccordion">
+                                <div class="accordion-body">
+                                    {% if all_teacher_names %}
+                                    <p class="mb-2"><strong>Enseignants ayant voté:</strong></p>
+                                    <ul class="list-inline">
+                                        {% for name in all_teacher_names %}
+                                            <li class="list-inline-item"><span class="badge bg-light text-dark border participant-badge">{{ name }}</span></li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% endif %}
+                                    {% if not final_choice_db and not all_expected_voted and missing_teachers %}
+                                    <hr>
+                                    <p class="mb-1"><strong>Enseignants (liste principale) manquants:</strong></p>
+                                     <ul class="list-inline">
+                                        {% for name in missing_teachers %}
+                                            <li class="list-inline-item"><span class="badge bg-warning-light text-dark border border-warning participant-badge-missing">{{ name }}</span></li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% elif not final_choice_db and all_expected_voted %}
+                                     <hr>
+                                     <p class="text-success"><i class="fas fa-check-circle"></i> Tous les enseignants de la liste principale ont participé.</p>
+                                    {% endif %}
+                                    {% if not all_teacher_names and not final_choice_db %}
+                                        <p class="text-muted fst-italic">Aucun enseignant n'a voté pour le moment.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <!-- Jours non sélectionnés -->
+                        {% if not final_choice_db and days_without_any_selection and submissions_raw %}
+                        <div class="accordion-item">
+                            <h3 class="accordion-header" id="headingUnselectedDays">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUnselectedDays" aria-expanded="false" aria-controls="#collapseUnselectedDays">
+                                    <i class="fas fa-calendar-times me-2 icon-danger"></i>Jours Sans Sélection de Créneau
+                                </button>
+                            </h3>
+                            <div id="collapseUnselectedDays" class="accordion-collapse collapse" aria-labelledby="headingUnselectedDays" data-bs-parent="#summaryAccordion">
+                                <div class="accordion-body">
+                                    <p>Les jours suivants n'ont reçu aucune proposition de créneau de la part des enseignants :</p>
+                                    <ul class="list-group">
+                                        {% for day in days_without_any_selection %}
+                                        <li class="list-group-item bg-light-warning">{{ day }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div> <!-- Fin Accordion -->
+                </section>
+                {% elif not final_choice_db %}
+                 <section class="summary-section card shadow-xl p-4 p-md-5 mb-5 text-center">
+                     <i class="fas fa-hourglass-start fa-3x text-muted mb-3"></i>
+                    <h2 class="card-title mb-3">En Attente de Votes</h2>
+                    <p class="lead text-muted">Aucun vote n'a encore été soumis. Soyez le premier à partager vos disponibilités !</p>
+                </section>
+                {% endif %}
+
+            </div> <!-- Fin col-lg-12 -->
+        </div> <!-- Fin row justify-content-center -->
+    </div>
+
+    <!-- ... (footer et script JS comme avant) ... -->
+    <footer class="main-footer text-center py-4 mt-auto">
+        <div class="container">
+            <p class="mb-0">© {{ current_year }} - Planificateur de Réunion LPO - JEAN ROSTAND</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- JavaScript pour afficher/masquer le champ "Autre Nom" -->
+    <script>
+        function toggleOtherTeacherField() {
+            var select = document.getElementById('teacher_name_select');
+            var otherField = document.getElementById('other_teacher_field');
+            var otherInput = document.getElementById('other_teacher_name');
+            if (select.value === 'Autre...') {
+                otherField.style.display = 'block';
+                otherInput.required = true;
+            } else {
+                otherField.style.display = 'none';
+                otherInput.required = false;
+                otherInput.value = ''; 
+            }
+        }
+
+        function toggleOtherTeacherDeleteField() {
+            var select = document.getElementById('teacher_name_to_delete_select');
+            var otherField = document.getElementById('other_teacher_delete_field');
+            var otherInput = document.getElementById('other_teacher_name_delete');
+            if (select.value === 'Autre...') {
+                otherField.style.display = 'block';
+                otherInput.required = true;
+            } else {
+                otherField.style.display = 'none';
+                otherInput.required = false;
+                otherInput.value = '';
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            var teacherNameSelect = document.getElementById('teacher_name_select');
+            if (teacherNameSelect) {
+                toggleOtherTeacherField();
+            }
+            
+            var teacherNameToDeleteSelect = document.getElementById('teacher_name_to_delete_select');
+            if (teacherNameToDeleteSelect) {
+                toggleOtherTeacherDeleteField();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+Flask
+reportlab 
+# WeasyPrint (si vous l'utilisiez et comptez le faire fonctionner)
+# ... autres dépendances que vous auriez ajoutées
+Click
