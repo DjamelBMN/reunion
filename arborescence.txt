@@ -20,3 +20,6 @@ flask init-db
 
 # 4. Lancer l'application (pour tester)
 flask run
+
+
+postgresql://reunion_db_oxdc_user:54YUHAFse0Rw8hMBGTbvf7GzZMDeZgDx@dpg-d0vnoh8gjchc739vlr00-a/reunion_db_oxdc
