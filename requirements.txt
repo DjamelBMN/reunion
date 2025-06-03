@@ -1,5 +1,6 @@
 Flask
 reportlab 
+gunicorn
 # WeasyPrint (si vous l'utilisiez et comptez le faire fonctionner)
 # ... autres dépendances que vous auriez ajoutées
 Click
