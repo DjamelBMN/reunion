@@ -1,7 +1,5 @@
 Flask
-reportlab 
 gunicorn
-psycopg2-binary
-# WeasyPrint (si vous l'utilisiez et comptez le faire fonctionner)
-# ... autres dépendances que vous auriez ajoutées
+reportlab
 Click
+WeasyPrint
